@@ -3,7 +3,7 @@ import pathlib
 from datetime import datetime
 
 from .db import get_supabase
-from .mailer import build_message, send_message
+from .mailer import build_message, get_access_token, send_via_gmail_api
 
 UPLOAD_DIR = pathlib.Path("uploads")
 POLL_SECONDS = 60
@@ -32,7 +32,9 @@ def process_job(db, job: dict) -> None:
 
     msg = build_message(job, attachment_path)
     try:
-        send_message(msg)
+        owner = db.table("users").select("*").eq("id", job["user_id"]).execute().data[0]
+        access_token = get_access_token(owner["refresh_token"])
+        send_via_gmail_api(access_token, msg)
         update = {"status": "sent", "sent_at": datetime.now().isoformat()}
         if job.get("attachment_filename") and not (attachment_path and attachment_path.exists()):
             update["error_message"] = "Attachment file missing; sent without it"

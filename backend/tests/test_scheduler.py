@@ -23,14 +23,18 @@ def test_due_jobs_includes_queued_and_past_scheduled(fake_db):
 
 
 def test_process_job_marks_sent_on_success(fake_db, monkeypatch):
+    fake_db.table("users").insert(
+        [{"id": "user-1", "google_sub": "g1", "email": "a@x.com", "refresh_token": "refresh-abc"}]
+    ).execute()
     fake_db.table("email_jobs").insert(
-        [{"id": "job-1", "batch_id": "b1", "to_email": "a@x.com", "from_email": "b@x.com",
+        [{"id": "job-1", "batch_id": "b1", "to_email": "a@x.com", "from_email": "a@x.com",
           "cc": None, "subject": "Hi", "content": "Body", "attachment_filename": None,
-          "status": "queued"}]
+          "status": "queued", "user_id": "user-1"}]
     ).execute()
     job = fake_db.table("email_jobs").select("*").eq("id", "job-1").execute().data[0]
 
-    monkeypatch.setattr("app.scheduler.send_message", lambda msg: None)
+    monkeypatch.setattr("app.scheduler.get_access_token", lambda refresh_token: "access-token")
+    monkeypatch.setattr("app.scheduler.send_via_gmail_api", lambda access_token, msg: None)
 
     process_job(fake_db, job)
 
@@ -40,20 +44,24 @@ def test_process_job_marks_sent_on_success(fake_db, monkeypatch):
 
 
 def test_process_job_marks_failed_on_exception(fake_db, monkeypatch):
+    fake_db.table("users").insert(
+        [{"id": "user-2", "google_sub": "g2", "email": "b@x.com", "refresh_token": "refresh-xyz"}]
+    ).execute()
     fake_db.table("email_jobs").insert(
         [{"id": "job-2", "batch_id": "b1", "to_email": "a@x.com", "from_email": "b@x.com",
           "cc": None, "subject": "Hi", "content": "Body", "attachment_filename": None,
-          "status": "queued"}]
+          "status": "queued", "user_id": "user-2"}]
     ).execute()
     job = fake_db.table("email_jobs").select("*").eq("id", "job-2").execute().data[0]
 
-    def _raise(msg):
-        raise RuntimeError("smtp down")
+    def _raise(access_token, msg):
+        raise RuntimeError("gmail api down")
 
-    monkeypatch.setattr("app.scheduler.send_message", _raise)
+    monkeypatch.setattr("app.scheduler.get_access_token", lambda refresh_token: "access-token")
+    monkeypatch.setattr("app.scheduler.send_via_gmail_api", _raise)
 
     process_job(fake_db, job)
 
     updated = fake_db.table("email_jobs").select("*").eq("id", "job-2").execute().data[0]
     assert updated["status"] == "failed"
-    assert "smtp down" in updated["error_message"]
+    assert "gmail api down" in updated["error_message"]
