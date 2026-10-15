@@ -20,6 +20,14 @@ pytest
 ```
 Copy `backend/.env.example` to `backend/.env` and fill in real Supabase + SMTP credentials before running the server for real.
 
+Frontend:
+```bash
+cd frontend
+npm install
+npm run dev
+```
+Copy `frontend/.env.example` to `frontend/.env` if the backend isn't at `http://localhost:8000`.
+
 ## Progress
 
 ### Task 1 — Backend scaffold, config, Supabase client ✅ (2026-10-15)
@@ -59,7 +67,10 @@ Copy `backend/.env.example` to `backend/.env` and fill in real Supabase + SMTP c
 - Wired into `main.py` startup event (`asyncio.create_task(scheduler_loop())`).
 - Tests: `backend/tests/test_scheduler.py` — 3 passed. Full backend suite: 15 passed.
 - **Backend is functionally complete** (all 4 endpoints + scheduler + mailer).
-### Task 10 — Frontend scaffold — not started
+### Task 10 — Frontend scaffold ✅ (2026-10-15)
+- Created Vite + Vue 3 + Vuetify app in `frontend/`: `src/main.js`, `App.vue`, `plugins/vuetify.js` (minimal theme: muted blue primary, flat cards/buttons), `router/index.js`, `api/client.js` (`uploadSheet`, `getBatch`, `confirmBatch`, `listJobs`), placeholder `UploadView.vue`.
+- Added `.claude/launch.json` so `preview_start` can run `npm --prefix frontend run dev` for browser testing.
+- Verified in browser: dev server runs, `/` redirects to `/upload`, app bar + heading render, no console errors.
 ### Task 11 — Upload and Preview views — not started
 ### Task 12 — Status/Track view — not started
 
