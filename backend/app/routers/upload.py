@@ -24,9 +24,19 @@ async def upload_sheet(
     batch_id = str(uuid.uuid4())
     batch_dir = UPLOAD_DIR / batch_id
     batch_dir.mkdir(parents=True, exist_ok=True)
+    attachment_names = []
     for attachment in attachments:
         contents = await attachment.read()
         (batch_dir / attachment.filename).write_bytes(contents)
+        attachment_names.append(attachment.filename)
+
+    # If exactly one attachment was uploaded, auto-link it to any row that
+    # didn't specify a filename in the sheet's Attachment column.
+    fallback_attachment = attachment_names[0] if len(attachment_names) == 1 else None
+    if fallback_attachment:
+        for row in rows:
+            if not row.get("attachment_filename"):
+                row["attachment_filename"] = fallback_attachment
 
     records = [
         {**row, "batch_id": batch_id, "status": "pending_review"} for row in rows
