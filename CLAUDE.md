@@ -7,7 +7,7 @@ Upload Excel/CSV sheet → preview parsed emails → confirm → send/schedule v
 - Execution mode: inline, one task at a time, discuss after each task, working directly on `master`.
 
 ## Stack
-FastAPI + Supabase (Postgres) + SMTP (`smtplib`) backend; Vue 3 + Vuetify (Vite) frontend, minimal/sleek theme. No auth in v1.
+FastAPI + Supabase (Postgres) + SMTP (`smtplib`) backend; Vue 3 (Vite) frontend with Vuetify installed but mostly unused — UI is hand-styled to match an approved design (Mono theme, light/dark mode, see `frontend/src/theme/mono.js`). No auth in v1.
 
 ## Setup
 Backend:
@@ -89,6 +89,19 @@ User felt the original minimal/flat design looked too basic. Used the `superdesi
 - Created `frontend/src/views/StatusView.vue`: stat cards (Sent/Scheduled/Failed/Pending review counts, computed client-side from `listJobs()`), data table with color-coded status chips (`mdi-check-circle`/`mdi-clock-outline`/`mdi-alert-circle`/`mdi-file-document-outline`), Refresh button, error handling on load.
 - Added `/status` route to `router/index.js`.
 - **All 12 plan tasks complete.** App has upload→preview→confirm→send/schedule→track fully wired, but still needs real Supabase + SMTP credentials in `backend/.env` before anything actually works end-to-end — see Task 11 note above (`.env.example` has the shape).
+
+### Visual redesign v2 — Mono theme (light/dark) ✅ (2026-10-15)
+User brought an updated design made externally with Claude Design (claude.ai/design prototype, `.dc.html` format using a custom templating engine) — superseded the Modern SaaS redesign above. Downloaded from `C:\Users\whaid\Downloads\Sheet Email Sender Design\`, source copied into `design/claude-design-prototype/` for reference. Hand-ported into real Vue/Vuetify code (the prototype used its own template engine, not Vue):
+- Picked **Mono theme only** (monochrome, pill-shaped controls, `br:999px`) with a **light/dark mode toggle** instead of the prototype's 3-way Indigo/Mono/Night switcher — user's explicit choice.
+- New font: Geist / Geist Mono (replaces Plus Jakarta Sans from v1 redesign).
+- `frontend/src/theme/mono.js` (new): `LIGHT`/`DARK` token objects, status `ICON` SVG path data, style-builder helpers (`chipStyle`, `primaryStyle`, `navLinkStyle`, etc.).
+- `frontend/src/composables/useTheme.js` (new): reactive light/dark mode, persisted to `localStorage` (`ses-mode`).
+- `App.vue`: rewritten to match prototype nav exactly (logo, theme toggle sun/moon icon, Upload/Status links) plus a step breadcrumb ("1 Upload — 2 Preview — 3 Status") reflecting the active route.
+- `UploadView.vue` / `PreviewView.vue` / `StatusView.vue`: rewritten as hand-styled markup (CSS grid "tables", inline SVG icons) bound to the theme tokens — **mostly bypasses Vuetify's own component styling now** (Vuetify kept installed/wired in `main.js` for potential future use, but no `v-card`/`v-btn`/`v-data-table` in the redesigned views).
+- `frontend/src/plugins/vuetify.js` simplified back to defaults (old gradient/elevated-card theme removed); `frontend/src/assets/main.css` trimmed to just font + spin keyframe.
+- `frontend/index.html`: Google Fonts link swapped to Geist/Geist Mono.
+- Verified in browser: Upload and Status screens render correctly in both light and dark mode, dark mode persists across navigation, error handling (from the Task 11 fix) still works correctly in the new markup.
+- Commit: `feat: implement Mono theme redesign from Claude Design prototype`.
 
 ## Notes / decisions
 - Working directly on `master`, no feature branches (solo, simple project).
