@@ -51,7 +51,9 @@ Copy `backend/.env.example` to `backend/.env` and fill in real Supabase + SMTP c
 ### Task 7 — Jobs listing endpoint ✅ (2026-10-15)
 - Created `backend/app/routers/jobs.py` (`GET /jobs?status=&batch_id=`), registered in `main.py`.
 - Test: `backend/tests/test_jobs.py` — passed. Full suite: 9 passed.
-### Task 8 — Mailer module — not started
+### Task 8 — Mailer module ✅ (2026-10-15)
+- Created `backend/app/mailer.py` (`build_message()`, `send_message()`), SMTP calls mocked in tests.
+- Tests: `backend/tests/test_mailer.py` — 3 passed. Full suite: 12 passed.
 ### Task 9 — Scheduler — not started
 ### Task 10 — Frontend scaffold — not started
 ### Task 11 — Upload and Preview views — not started
