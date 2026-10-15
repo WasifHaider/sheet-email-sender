@@ -1,11 +1,15 @@
-name: Backend Deploy
+name: Backend CI/CD
 
 on:
   push:
     branches: [master]
     paths:
       - "backend/**"
-      - ".github/workflows/backend-deploy.yml"
+      - ".github/workflows/backend.yml"
+  pull_request:
+    paths:
+      - "backend/**"
+      - ".github/workflows/backend.yml"
 
 env:
   AWS_REGION: ap-south-1
@@ -13,9 +17,25 @@ env:
 
 jobs:
   test:
-    uses: ./.github/workflows/backend-ci.yml
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Run tests
+        run: python -m pytest -v
 
   deploy:
+    if: github.event_name == 'push' && github.ref == 'refs/heads/master'
     needs: test
     runs-on: ubuntu-latest
     steps:
