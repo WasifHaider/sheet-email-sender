@@ -33,7 +33,10 @@ Copy `backend/.env.example` to `backend/.env` and fill in real Supabase + SMTP c
 - Created `backend/db/schema.sql` (`email_jobs` table + batch_id/status indexes).
 - User ran it in Supabase SQL Editor; `email_jobs` table confirmed created.
 - Commit: `31be6d5`.
-### Task 3 — Sheet parser — not started
+### Task 3 — Sheet parser ✅ (2026-10-15)
+- Created `backend/app/sheet_parser.py` (`parse_sheet()`, `SheetParseError`).
+- Tests: `backend/tests/test_sheet_parser.py` — 3 passed (happy path, blank optionals, missing required column).
+- Commit: `0f74680`.
 ### Task 4 — Upload endpoint — not started
 ### Task 5 — Batch listing endpoint — not started
 ### Task 6 — Confirm endpoint — not started
