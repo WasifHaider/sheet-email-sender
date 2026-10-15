@@ -71,7 +71,11 @@ Copy `frontend/.env.example` to `frontend/.env` if the backend isn't at `http://
 - Created Vite + Vue 3 + Vuetify app in `frontend/`: `src/main.js`, `App.vue`, `plugins/vuetify.js` (minimal theme: muted blue primary, flat cards/buttons), `router/index.js`, `api/client.js` (`uploadSheet`, `getBatch`, `confirmBatch`, `listJobs`), placeholder `UploadView.vue`.
 - Added `.claude/launch.json` so `preview_start` can run `npm --prefix frontend run dev` for browser testing.
 - Verified in browser: dev server runs, `/` redirects to `/upload`, app bar + heading render, no console errors.
-### Task 11 — Upload and Preview views — not started
+### Task 11 — Upload and Preview views ✅ (2026-10-15)
+- Full `UploadView.vue` (file inputs, upload + navigate to preview) and `PreviewView.vue` (data table, Confirm & Queue button) implemented. Added `preview` route.
+- Fixed a gap found during manual verification: `PreviewView`'s `load()` had no error handling — a failed fetch left the table stuck on "Loading items..." forever. Added try/catch/finally matching the pattern already used in `confirm()`.
+- Verified in browser (no real Supabase credentials available yet, so DB calls fail by design — used that to test error paths): Upload screen renders correctly; Preview screen on a failed fetch now shows a dismissable error instead of hanging, Confirm button correctly disabled with 0 rows.
+- **Still needed before this app can actually send/store anything for real:** real Supabase URL + key and SMTP credentials in `backend/.env` (not committed, `.env.example` has the shape).
 ### Task 12 — Status/Track view — not started
 
 ## Notes / decisions
