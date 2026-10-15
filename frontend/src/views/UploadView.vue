@@ -69,7 +69,7 @@ const attachmentFiles = ref([])
 const loading = ref(false)
 const errorMessage = ref('')
 
-const reqCols = ['To', 'From', 'Subject', 'Email Content']
+const reqCols = ['To', 'Subject', 'Email Content']
 const optCols = ['CC', 'Attachment', 'Date', 'Time']
 
 const sheetName = computed(() => sheetFile.value?.name || 'Choose a sheet or drop it here')

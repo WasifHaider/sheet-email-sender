@@ -20,7 +20,13 @@
             <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
           </svg>
         </button>
-        <div style="display: flex; gap: 4px">
+        <span v-if="user" style="font-size: 13px" :style="{ color: t.muted }">{{ user.email }}</span>
+        <button v-if="user" :style="toggleStyle" @click="handleLogout" aria-label="Log out">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"></path>
+          </svg>
+        </button>
+        <div v-if="user" style="display: flex; gap: 4px">
           <router-link :to="{ name: 'upload' }" :style="navLinkStyle(route.name !== 'status')">Upload</router-link>
           <router-link :to="{ name: 'status' }" :style="navLinkStyle(route.name === 'status')">Status</router-link>
         </div>
@@ -28,7 +34,7 @@
     </nav>
 
     <div style="max-width: 1080px; margin: 0 auto; padding: 48px 32px 80px">
-      <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 32px; font-size: 13px" :style="{ color: t.muted }">
+      <div v-if="user" style="display: flex; align-items: center; gap: 10px; margin-bottom: 32px; font-size: 13px" :style="{ color: t.muted }">
         <span :style="stepStyle(route.name === 'upload')">1 Upload</span><span>—</span>
         <span :style="stepStyle(route.name === 'preview')">2 Preview</span><span>—</span>
         <span :style="stepStyle(route.name === 'status')">3 Status</span>
@@ -41,12 +47,20 @@
 
 <script setup>
 import { computed } from 'vue'
-import { useRoute } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import { useTheme } from './composables/useTheme'
+import { useAuth } from './composables/useAuth'
 import { navLinkStyle as navLinkStyleFn, stepStyle as stepStyleFn } from './theme/mono'
 
 const route = useRoute()
+const router = useRouter()
 const { mode, toggle, t } = useTheme()
+const { user, logout } = useAuth()
+
+async function handleLogout() {
+  await logout()
+  router.push({ name: 'login' })
+}
 
 const rootStyle = computed(() => ({
   minHeight: '100vh',
