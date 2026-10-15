@@ -54,7 +54,11 @@ Copy `backend/.env.example` to `backend/.env` and fill in real Supabase + SMTP c
 ### Task 8 — Mailer module ✅ (2026-10-15)
 - Created `backend/app/mailer.py` (`build_message()`, `send_message()`), SMTP calls mocked in tests.
 - Tests: `backend/tests/test_mailer.py` — 3 passed. Full suite: 12 passed.
-### Task 9 — Scheduler — not started
+### Task 9 — Scheduler ✅ (2026-10-15)
+- Created `backend/app/scheduler.py` (`due_jobs()`, `process_job()`, `scheduler_loop()`), polls every 60s.
+- Wired into `main.py` startup event (`asyncio.create_task(scheduler_loop())`).
+- Tests: `backend/tests/test_scheduler.py` — 3 passed. Full backend suite: 15 passed.
+- **Backend is functionally complete** (all 4 endpoints + scheduler + mailer).
 ### Task 10 — Frontend scaffold — not started
 ### Task 11 — Upload and Preview views — not started
 ### Task 12 — Status/Track view — not started
