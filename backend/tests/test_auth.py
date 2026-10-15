@@ -5,7 +5,7 @@ import pytest
 from fastapi import HTTPException
 from starlette.requests import Request
 
-from app.auth import create_session_token, decode_session_token, get_current_user
+from app.auth import SESSION_COOKIE_NAME, create_session_token, decode_session_token, get_current_user
 
 
 def _request_with_cookie(token: str | None) -> Request:
@@ -111,3 +111,34 @@ def test_google_callback_updates_existing_user_without_losing_refresh_token(fake
     assert users[0]["refresh_token"] == "original-refresh"
 
     app.dependency_overrides.clear()
+
+
+def test_me_returns_401_without_cookie():
+    client = TestClient(app)
+    response = client.get("/auth/me")
+    assert response.status_code == 401
+
+
+def test_me_returns_user_with_valid_cookie(monkeypatch):
+    monkeypatch.setenv("SESSION_SECRET", "test-secret")
+    token = create_session_token("user-1", "a@x.com")
+    client = TestClient(app)
+    client.cookies.set(SESSION_COOKIE_NAME, token)
+
+    response = client.get("/auth/me")
+
+    assert response.status_code == 200
+    assert response.json() == {"id": "user-1", "email": "a@x.com"}
+
+
+def test_logout_clears_cookie(monkeypatch):
+    monkeypatch.setenv("SESSION_SECRET", "test-secret")
+    token = create_session_token("user-1", "a@x.com")
+    client = TestClient(app)
+    client.cookies.set(SESSION_COOKIE_NAME, token)
+
+    response = client.post("/auth/logout")
+
+    assert response.status_code == 200
+    set_cookie = response.headers.get("set-cookie", "")
+    assert "session=" in set_cookie and ("Max-Age=0" in set_cookie or "expires=" in set_cookie.lower())

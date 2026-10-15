@@ -2,9 +2,9 @@ import os
 
 from authlib.integrations.starlette_client import OAuth
 from fastapi import APIRouter, Depends, Request
-from fastapi.responses import RedirectResponse
+from fastapi.responses import JSONResponse, RedirectResponse
 
-from ..auth import SESSION_MAX_AGE_SECONDS, SESSION_COOKIE_NAME, create_session_token
+from ..auth import SESSION_MAX_AGE_SECONDS, SESSION_COOKIE_NAME, create_session_token, get_current_user
 from ..db import get_supabase
 
 router = APIRouter()
@@ -61,4 +61,16 @@ async def google_callback(request: Request, db=Depends(get_supabase)):
         samesite="lax",
         max_age=SESSION_MAX_AGE_SECONDS,
     )
+    return response
+
+
+@router.get("/auth/me")
+def me(user: dict = Depends(get_current_user)):
+    return user
+
+
+@router.post("/auth/logout")
+def logout():
+    response = JSONResponse({"status": "logged_out"})
+    response.delete_cookie(SESSION_COOKIE_NAME)
     return response
