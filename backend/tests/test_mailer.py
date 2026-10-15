@@ -1,9 +1,7 @@
 import pathlib
 from email.message import EmailMessage
 
-import pytest
-
-from app.mailer import build_message, send_message
+from app.mailer import build_message, get_access_token, send_via_gmail_api
 
 
 def test_build_message_sets_headers_and_body():
@@ -36,40 +34,56 @@ def test_build_message_attaches_file(tmp_path):
     assert attachments[0].get_filename() == "report.txt"
 
 
-def test_send_message_calls_smtp(monkeypatch):
-    sent = {}
+class _FakeResponse:
+    def __init__(self, json_data):
+        self._json_data = json_data
 
-    class FakeSMTP:
-        def __init__(self, host, port):
-            sent["host"] = host
-            sent["port"] = port
+    def raise_for_status(self):
+        pass
 
-        def __enter__(self):
-            return self
+    def json(self):
+        return self._json_data
 
-        def __exit__(self, *args):
-            return False
 
-        def starttls(self):
-            sent["starttls"] = True
+def test_get_access_token_calls_google_token_endpoint(monkeypatch):
+    captured = {}
 
-        def login(self, user, password):
-            sent["login"] = (user, password)
+    def fake_post(url, data=None, timeout=None, **kwargs):
+        captured["url"] = url
+        captured["data"] = data
+        return _FakeResponse({"access_token": "new-access-token"})
 
-        def send_message(self, msg):
-            sent["message"] = msg
+    monkeypatch.setenv("GOOGLE_CLIENT_ID", "client-id")
+    monkeypatch.setenv("GOOGLE_CLIENT_SECRET", "client-secret")
+    monkeypatch.setattr("app.mailer.httpx.post", fake_post)
 
-    monkeypatch.setenv("SMTP_HOST", "smtp.test.com")
-    monkeypatch.setenv("SMTP_PORT", "587")
-    monkeypatch.setenv("SMTP_USER", "user@test.com")
-    monkeypatch.setenv("SMTP_PASSWORD", "secret")
-    monkeypatch.setattr("app.mailer.smtplib.SMTP", FakeSMTP)
+    token = get_access_token("refresh-abc")
+
+    assert token == "new-access-token"
+    assert captured["url"] == "https://oauth2.googleapis.com/token"
+    assert captured["data"]["refresh_token"] == "refresh-abc"
+    assert captured["data"]["grant_type"] == "refresh_token"
+
+
+def test_send_via_gmail_api_posts_base64_message(monkeypatch):
+    captured = {}
+
+    def fake_post(url, headers=None, json=None, timeout=None, **kwargs):
+        captured["url"] = url
+        captured["headers"] = headers
+        captured["json"] = json
+        return _FakeResponse({"id": "msg-1"})
+
+    monkeypatch.setattr("app.mailer.httpx.post", fake_post)
 
     msg = EmailMessage()
     msg["To"] = "a@x.com"
-    send_message(msg)
+    msg["From"] = "b@x.com"
+    msg["Subject"] = "Hi"
+    msg.set_content("Body")
 
-    assert sent["host"] == "smtp.test.com"
-    assert sent["port"] == 587
-    assert sent["login"] == ("user@test.com", "secret")
-    assert sent["message"] is msg
+    send_via_gmail_api("access-token-123", msg)
+
+    assert captured["url"] == "https://gmail.googleapis.com/gmail/v1/users/me/messages/send"
+    assert captured["headers"]["Authorization"] == "Bearer access-token-123"
+    assert "raw" in captured["json"]
