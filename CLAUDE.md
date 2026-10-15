@@ -76,9 +76,22 @@ Copy `frontend/.env.example` to `frontend/.env` if the backend isn't at `http://
 - Fixed a gap found during manual verification: `PreviewView`'s `load()` had no error handling — a failed fetch left the table stuck on "Loading items..." forever. Added try/catch/finally matching the pattern already used in `confirm()`.
 - Verified in browser (no real Supabase credentials available yet, so DB calls fail by design — used that to test error paths): Upload screen renders correctly; Preview screen on a failed fetch now shows a dismissable error instead of hanging, Confirm button correctly disabled with 0 rows.
 - **Still needed before this app can actually send/store anything for real:** real Supabase URL + key and SMTP credentials in `backend/.env` (not committed, `.env.example` has the shape).
-### Task 12 — Status/Track view — not started
+### Visual redesign — Modern SaaS ✅ (2026-10-15)
+User felt the original minimal/flat design looked too basic. Used the `superdesign` skill to explore a "Modern SaaS" direction (Linear/Stripe dashboard feel) on Superdesign's canvas, user approved it, then it was hand-ported into real Vuetify code:
+- New theme in `frontend/src/plugins/vuetify.js`: indigo/violet (`#6366F1`) primary, `#F8FAFC` background, elevated rounded-xl cards instead of flat.
+- `frontend/src/assets/main.css` (new): Plus Jakarta Sans font, `.gradient-btn` (indigo→violet gradient primary actions), `.elevated-card`/`.app-bar-shadow` shadows, `.status-chip-*` color classes.
+- `App.vue`: icon + bold title, active-route nav highlighting, Upload/Status links.
+- `UploadView.vue` / `PreviewView.vue`: redesigned with dropzone icon card, mdi icons throughout, gradient buttons, row-count chip, info/hint cards.
+- Superdesign project artifacts kept in `.superdesign/` (`init/` repo analysis, `design-system.md`) for any future iteration — not needed for the app to run.
+- Commits: redesign + Status view.
+
+### Task 12 — Status/Track view ✅ (2026-10-15, built as part of the redesign above)
+- Created `frontend/src/views/StatusView.vue`: stat cards (Sent/Scheduled/Failed/Pending review counts, computed client-side from `listJobs()`), data table with color-coded status chips (`mdi-check-circle`/`mdi-clock-outline`/`mdi-alert-circle`/`mdi-file-document-outline`), Refresh button, error handling on load.
+- Added `/status` route to `router/index.js`.
+- **All 12 plan tasks complete.** App has upload→preview→confirm→send/schedule→track fully wired, but still needs real Supabase + SMTP credentials in `backend/.env` before anything actually works end-to-end — see Task 11 note above (`.env.example` has the shape).
 
 ## Notes / decisions
 - Working directly on `master`, no feature branches (solo, simple project).
 - Deploy target undecided — running locally for now (per user).
 - Git identity for this repo (personal project): `WasifHaider <mwasifhaider1@gmail.com>`, set locally via `git config user.name/user.email` in this repo — overrides the machine's global work identity.
+- `.claude/launch.json` config name is `frontend`, runs `npm --prefix frontend run dev` for browser-pane testing via `preview_start`.
