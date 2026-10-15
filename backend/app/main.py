@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from .routers import upload
+from .routers import batches, upload
 
 app = FastAPI(title="Sheet Email Sender")
 
@@ -13,6 +13,7 @@ app.add_middleware(
 )
 
 app.include_router(upload.router)
+app.include_router(batches.router)
 
 
 @app.get("/health")
