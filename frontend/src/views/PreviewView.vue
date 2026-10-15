@@ -1,27 +1,66 @@
 <template>
-  <v-container class="py-10" style="max-width: 960px">
-    <h1 class="text-h5 font-weight-medium mb-1">Preview</h1>
-    <p class="text-body-2 text-medium-emphasis mb-6">
-      Review the parsed rows below. To fix a mistake, re-upload the sheet instead of editing here.
-    </p>
+  <v-container class="py-12" style="max-width: 960px">
+    <div class="d-flex flex-column flex-md-row align-md-end justify-space-between mb-8" style="gap: 16px">
+      <div style="max-width: 560px">
+        <h1 class="text-h4 font-weight-bold mb-2">Preview emails</h1>
+        <p class="text-body-2 text-medium-emphasis">
+          Review the parsed rows below. If you notice an error, re-upload your sheet. Emails will be processed
+          exactly as shown.
+        </p>
+      </div>
+      <div class="stat-chip d-flex align-center px-3 py-2">
+        <v-icon icon="mdi-table" color="primary" size="18" class="mr-2" />
+        <span class="text-caption font-weight-bold text-primary">{{ rows.length }} rows parsed</span>
+      </div>
+    </div>
 
-    <v-card class="pa-4">
-      <v-data-table :headers="headers" :items="rows" :loading="loading" density="comfortable">
+    <v-card>
+      <v-data-table :headers="headers" :items="rows" :loading="loading" density="comfortable" hover>
         <template #item.content="{ item }">
-          {{ truncate(item.content) }}
+          <span class="text-medium-emphasis font-italic">{{ truncate(item.content) }}</span>
+        </template>
+        <template #header.send_date="{ column }">
+          <v-icon icon="mdi-clock-outline" size="14" class="mr-1" />{{ column.title }}
+        </template>
+        <template #item.send_date="{ item }">
+          <span v-if="item.send_date" class="text-caption text-medium-emphasis">{{ item.send_date }}</span>
+          <span v-if="item.send_time" class="text-caption font-weight-bold text-medium-emphasis ml-1">{{ item.send_time }}</span>
+          <span v-if="!item.send_date && !item.send_time" class="text-caption text-medium-emphasis">Immediate</span>
+        </template>
+        <template #header.attachment_filename="{ column }">
+          <v-icon icon="mdi-paperclip" size="14" class="mr-1" />{{ column.title }}
+        </template>
+        <template #item.attachment_filename="{ item }">
+          <v-chip v-if="item.attachment_filename" size="small" color="primary" variant="tonal">
+            {{ item.attachment_filename }}
+          </v-chip>
+          <span v-else class="text-medium-emphasis">—</span>
         </template>
       </v-data-table>
 
-      <v-alert v-if="errorMessage" type="error" density="compact" class="mt-4">
+      <v-alert v-if="errorMessage" type="error" density="compact" class="ma-4">
         {{ errorMessage }}
       </v-alert>
 
-      <div class="d-flex justify-end mt-4">
-        <v-btn color="primary" :loading="confirming" :disabled="rows.length === 0" @click="confirm">
-          Confirm & Queue
+      <v-divider />
+      <div class="d-flex flex-column flex-sm-row align-sm-center justify-space-between pa-6" style="gap: 16px">
+        <div class="d-flex align-center text-caption text-medium-emphasis">
+          <v-icon icon="mdi-alert-circle" color="warning" size="18" class="mr-2" />
+          Double check all addresses before sending
+        </div>
+        <v-btn class="gradient-btn" :loading="confirming" :disabled="rows.length === 0" @click="confirm">
+          <v-icon icon="mdi-send" size="18" class="mr-2" />
+          Confirm & Queue Batch
         </v-btn>
       </div>
     </v-card>
+
+    <div class="d-flex justify-center mt-8">
+      <v-btn variant="text" color="secondary" :to="{ name: 'upload' }">
+        <v-icon icon="mdi-chevron-left" size="18" class="mr-1" />
+        Back to Upload
+      </v-btn>
+    </div>
   </v-container>
 </template>
 
@@ -42,8 +81,7 @@ const headers = [
   { title: 'To', key: 'to_email' },
   { title: 'Subject', key: 'subject' },
   { title: 'Content', key: 'content' },
-  { title: 'Date', key: 'send_date' },
-  { title: 'Time', key: 'send_time' },
+  { title: 'Schedule', key: 'send_date' },
   { title: 'Attachment', key: 'attachment_filename' }
 ]
 

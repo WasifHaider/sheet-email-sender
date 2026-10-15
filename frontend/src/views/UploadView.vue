@@ -1,24 +1,45 @@
 <template>
-  <v-container class="py-10" style="max-width: 480px">
-    <h1 class="text-h5 font-weight-medium mb-1">Upload a sheet</h1>
-    <p class="text-body-2 text-medium-emphasis mb-6">
-      Columns: To, From, Subject, Email Content, CC, Attachment, Date, Time.
-    </p>
+  <v-container class="py-12" style="max-width: 480px">
+    <div class="mb-8">
+      <h1 class="text-h4 font-weight-bold mb-2">Upload a sheet</h1>
+      <p class="text-body-2 text-medium-emphasis">
+        Import your spreadsheet to start sending emails. Supports .xlsx and .csv formats.
+      </p>
+    </div>
 
-    <v-card class="pa-6">
+    <v-card class="pa-8">
+      <div class="dropzone-hint d-flex flex-column align-center justify-center py-6 mb-6">
+        <v-icon icon="mdi-cloud-upload-outline" color="primary" size="36" class="mb-2" />
+        <span class="text-body-2 font-weight-medium text-primary">Select your files below</span>
+      </div>
+
+      <div class="text-caption font-weight-bold text-medium-emphasis text-uppercase mb-1">
+        Sheet data
+      </div>
       <v-file-input
         v-model="sheetFile"
-        label="Sheet (.xlsx or .csv)"
+        prepend-icon=""
+        prepend-inner-icon="mdi-file-table-outline"
+        placeholder="Select sheet..."
         accept=".xlsx,.csv"
         density="comfortable"
         variant="outlined"
+        bg-color="background"
       />
+
+      <div class="text-caption font-weight-bold text-medium-emphasis text-uppercase mb-1">
+        Attachments (optional)
+      </div>
       <v-file-input
         v-model="attachmentFiles"
-        label="Attachments (optional)"
+        prepend-icon=""
+        prepend-inner-icon="mdi-paperclip"
+        placeholder="Select files..."
         multiple
         density="comfortable"
         variant="outlined"
+        bg-color="background"
+        class="mb-4"
       />
 
       <v-alert v-if="errorMessage" type="error" density="compact" class="mb-4">
@@ -26,14 +47,24 @@
       </v-alert>
 
       <v-btn
-        color="primary"
         block
+        height="44"
+        class="gradient-btn"
         :loading="loading"
         :disabled="!sheetFile"
         @click="submit"
       >
-        Upload
+        <v-icon icon="mdi-upload" size="18" class="mr-2" />
+        Upload & Preview
       </v-btn>
+    </v-card>
+
+    <v-card class="mt-6 pa-4 d-flex" variant="outlined">
+      <v-icon icon="mdi-information-outline" color="primary" size="18" class="mr-3 mt-1" />
+      <p class="text-caption text-medium-emphasis">
+        Required columns: <span class="font-weight-medium text-high-emphasis">To, From, Subject, Email Content</span>.
+        Optional: <span class="font-weight-medium text-high-emphasis">CC, Attachment, Date, Time</span>.
+      </p>
     </v-card>
   </v-container>
 </template>

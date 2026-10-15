@@ -13,9 +13,9 @@ export default createVuetify({
       minimal: {
         dark: false,
         colors: {
-          background: '#FAFAFA',
+          background: '#F8FAFC',
           surface: '#FFFFFF',
-          primary: '#3B82F6',
+          primary: '#6366F1',
           secondary: '#64748B',
           error: '#EF4444',
           success: '#22C55E',
@@ -25,8 +25,8 @@ export default createVuetify({
     }
   },
   defaults: {
-    VCard: { elevation: 0, rounded: 'lg', class: 'pa-2' },
+    VCard: { elevation: 0, rounded: 'xl', class: 'elevated-card' },
     VBtn: { elevation: 0, rounded: 'lg' },
-    VAppBar: { elevation: 0 }
+    VAppBar: { elevation: 0, class: 'app-bar-shadow' }
   }
 })

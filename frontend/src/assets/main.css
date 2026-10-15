@@ -1,0 +1,64 @@
+body {
+  font-family: 'Plus Jakarta Sans', 'Roboto', sans-serif;
+}
+
+.app-bar-shadow {
+  border-bottom: 1px solid #e2e8f0;
+  box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.05) !important;
+}
+
+.elevated-card {
+  box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1) !important;
+}
+
+.gradient-btn {
+  background: linear-gradient(to right, #6366f1, #8b5cf6) !important;
+  color: #fff !important;
+}
+
+.gradient-btn.v-btn--disabled {
+  background: #cbd5e1 !important;
+  color: #94a3b8 !important;
+}
+
+.nav-link-active {
+  color: #6366f1 !important;
+  font-weight: 600;
+}
+
+.dropzone-hint {
+  background-color: #eef2ff;
+  border: 2px dashed #c7d2fe;
+  border-radius: 12px;
+}
+
+.stat-chip {
+  background-color: #eef2ff;
+  border: 1px solid #e0e7ff;
+  border-radius: 8px;
+}
+
+.status-chip-sent {
+  background-color: #dcfce7 !important;
+  color: #166534 !important;
+}
+
+.status-chip-scheduled {
+  background-color: #fef3c7 !important;
+  color: #92400e !important;
+}
+
+.status-chip-queued {
+  background-color: #fef3c7 !important;
+  color: #92400e !important;
+}
+
+.status-chip-failed {
+  background-color: #fee2e2 !important;
+  color: #991b1b !important;
+}
+
+.status-chip-pending_review {
+  background-color: #f1f5f9 !important;
+  color: #475569 !important;
+}
