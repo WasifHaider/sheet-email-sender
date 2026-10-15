@@ -45,7 +45,9 @@ Copy `backend/.env.example` to `backend/.env` and fill in real Supabase + SMTP c
 ### Task 5 — Batch listing endpoint ✅ (2026-10-15)
 - Created `backend/app/routers/batches.py` (`GET /batches/{batch_id}`), registered in `main.py`.
 - Test: `backend/tests/test_batches.py` — passed. Full suite: 6 passed.
-### Task 6 — Confirm endpoint — not started
+### Task 6 — Confirm endpoint ✅ (2026-10-15)
+- Added `POST /batches/{batch_id}/confirm` to `backend/app/routers/batches.py`: flips rows to `queued` (no date / due now) or `scheduled` (future date).
+- Tests added to `backend/tests/test_batches.py`. Full suite: 8 passed.
 ### Task 7 — Jobs listing endpoint — not started
 ### Task 8 — Mailer module — not started
 ### Task 9 — Scheduler — not started
