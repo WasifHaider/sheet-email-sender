@@ -1,7 +1,7 @@
 from typing import BinaryIO, Optional
 import pandas as pd
 
-REQUIRED_COLUMNS = ["To", "From", "Subject", "Email Content"]
+REQUIRED_COLUMNS = ["To", "Subject", "Email Content"]
 
 
 class SheetParseError(Exception):
@@ -23,7 +23,6 @@ def parse_sheet(file_obj: BinaryIO, filename: str) -> list[dict]:
         rows.append(
             {
                 "to_email": str(row["To"]).strip(),
-                "from_email": str(row["From"]).strip(),
                 "subject": str(row["Subject"]).strip(),
                 "content": str(row["Email Content"]),
                 "cc": _clean_optional(row.get("CC")),

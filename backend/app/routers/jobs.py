@@ -2,6 +2,7 @@ from typing import Optional
 
 from fastapi import APIRouter, Depends
 
+from ..auth import get_current_user
 from ..db import get_supabase
 
 router = APIRouter()
@@ -12,8 +13,9 @@ def list_jobs(
     status: Optional[str] = None,
     batch_id: Optional[str] = None,
     db=Depends(get_supabase),
+    user: dict = Depends(get_current_user),
 ):
-    query = db.table("email_jobs").select("*")
+    query = db.table("email_jobs").select("*").eq("user_id", user["id"])
     if status:
         query = query.eq("status", status)
     if batch_id:

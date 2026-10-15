@@ -3,6 +3,7 @@ import uuid
 
 from fastapi import APIRouter, Depends, File, HTTPException, UploadFile
 
+from ..auth import get_current_user
 from ..db import get_supabase
 from ..sheet_parser import SheetParseError, parse_sheet
 
@@ -15,6 +16,7 @@ async def upload_sheet(
     sheet: UploadFile = File(...),
     attachments: list[UploadFile] = File(default=[]),
     db=Depends(get_supabase),
+    user: dict = Depends(get_current_user),
 ):
     try:
         rows = parse_sheet(sheet.file, sheet.filename)
@@ -30,8 +32,6 @@ async def upload_sheet(
         (batch_dir / attachment.filename).write_bytes(contents)
         attachment_names.append(attachment.filename)
 
-    # If exactly one attachment was uploaded, auto-link it to any row that
-    # didn't specify a filename in the sheet's Attachment column.
     fallback_attachment = attachment_names[0] if len(attachment_names) == 1 else None
     if fallback_attachment:
         for row in rows:
@@ -39,7 +39,14 @@ async def upload_sheet(
                 row["attachment_filename"] = fallback_attachment
 
     records = [
-        {**row, "batch_id": batch_id, "status": "pending_review"} for row in rows
+        {
+            **row,
+            "batch_id": batch_id,
+            "status": "pending_review",
+            "user_id": user["id"],
+            "from_email": user["email"],
+        }
+        for row in rows
     ]
     result = db.table("email_jobs").insert(records).execute()
     return {"batch_id": batch_id, "rows": result.data}
