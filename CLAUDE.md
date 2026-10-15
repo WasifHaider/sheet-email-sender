@@ -29,7 +29,10 @@ Copy `backend/.env.example` to `backend/.env` and fill in real Supabase + SMTP c
 - Verified: `pytest tests/test_main.py -v` → 1 passed.
 - Commit: `ae13514`.
 
-### Task 2 — Supabase schema — not started
+### Task 2 — Supabase schema ✅ (2026-10-15)
+- Created `backend/db/schema.sql` (`email_jobs` table + batch_id/status indexes).
+- User ran it in Supabase SQL Editor; `email_jobs` table confirmed created.
+- Commit: `31be6d5`.
 ### Task 3 — Sheet parser — not started
 ### Task 4 — Upload endpoint — not started
 ### Task 5 — Batch listing endpoint — not started
@@ -44,3 +47,4 @@ Copy `backend/.env.example` to `backend/.env` and fill in real Supabase + SMTP c
 ## Notes / decisions
 - Working directly on `master`, no feature branches (solo, simple project).
 - Deploy target undecided — running locally for now (per user).
+- Git identity for this repo (personal project): `WasifHaider <mwasifhaider1@gmail.com>`, set locally via `git config user.name/user.email` in this repo — overrides the machine's global work identity.
