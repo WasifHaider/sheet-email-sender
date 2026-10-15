@@ -1,111 +1,141 @@
 <template>
-  <v-container class="py-10" style="max-width: 960px">
-    <div class="d-flex flex-column flex-md-row align-md-end justify-space-between mb-8" style="gap: 16px">
+  <div>
+    <div style="display: flex; justify-content: space-between; align-items: flex-end; gap: 16px; flex-wrap: wrap; margin-bottom: 20px">
       <div>
-        <h1 class="text-h4 font-weight-bold mb-1">Job status</h1>
-        <p class="text-body-2 text-medium-emphasis">
-          Track the delivery progress of every uploaded batch.
-        </p>
+        <h1 style="font-size: 30px; letter-spacing: -0.03em; margin: 0 0 6px">Status</h1>
+        <div style="font-size: 14px" :style="{ color: t.muted }">Delivery across all queued jobs</div>
       </div>
-      <v-btn variant="outlined" color="secondary" :loading="loading" @click="load">
-        <v-icon icon="mdi-refresh" size="18" class="mr-2" />
+      <button :style="secondaryStyle" @click="load">
+        <svg
+          width="15"
+          height="15"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2.2"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          :class="{ spin: loading }"
+        >
+          <path d="M20 11a8 8 0 0 0-14-4L4 9M4 4v5h5M4 13a8 8 0 0 0 14 4l2-2M20 20v-5h-5"></path>
+        </svg>
         Refresh
-      </v-btn>
+      </button>
     </div>
 
-    <v-row class="mb-8" dense>
-      <v-col cols="6" md="3">
-        <v-card class="pa-4">
-          <div class="text-caption font-weight-bold text-medium-emphasis text-uppercase mb-1">Sent</div>
-          <div class="text-h5 font-weight-bold text-success">{{ counts.sent }}</div>
-        </v-card>
-      </v-col>
-      <v-col cols="6" md="3">
-        <v-card class="pa-4">
-          <div class="text-caption font-weight-bold text-medium-emphasis text-uppercase mb-1">Scheduled</div>
-          <div class="text-h5 font-weight-bold text-warning">{{ counts.scheduled }}</div>
-        </v-card>
-      </v-col>
-      <v-col cols="6" md="3">
-        <v-card class="pa-4">
-          <div class="text-caption font-weight-bold text-medium-emphasis text-uppercase mb-1">Failed</div>
-          <div class="text-h5 font-weight-bold text-error">{{ counts.failed }}</div>
-        </v-card>
-      </v-col>
-      <v-col cols="6" md="3">
-        <v-card class="pa-4">
-          <div class="text-caption font-weight-bold text-medium-emphasis text-uppercase mb-1">Pending review</div>
-          <div class="text-h5 font-weight-bold text-primary">{{ counts.pending_review }}</div>
-        </v-card>
-      </v-col>
-    </v-row>
+    <div v-if="errorMessage" :style="errorStyle">{{ errorMessage }}</div>
 
-    <v-alert v-if="errorMessage" type="error" density="compact" class="mb-4">
-      {{ errorMessage }}
-    </v-alert>
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-bottom: 24px">
+      <div v-for="stat in stats" :key="stat.key" :style="statCardStyle">
+        <div>
+          <div style="font-size: 13px; font-weight: 500; margin-bottom: 6px" :style="{ color: t.muted }">{{ stat.label }}</div>
+          <div style="font-size: 34px; font-weight: 700; letter-spacing: -0.03em; line-height: 1">{{ stat.n }}</div>
+        </div>
+        <div :style="statIconStyle(stat.key)">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <path :d="ICON[stat.key][0]"></path>
+            <path :d="ICON[stat.key][1]"></path>
+          </svg>
+        </div>
+      </div>
+    </div>
 
-    <v-card>
-      <v-data-table :headers="headers" :items="jobs" :loading="loading" density="comfortable" hover>
-        <template #item.status="{ item }">
-          <v-chip size="small" :class="`status-chip-${item.status}`" variant="flat">
-            <v-icon :icon="statusIcon(item.status)" size="14" class="mr-1" />
-            {{ statusLabel(item.status) }}
-          </v-chip>
-        </template>
-        <template #item.error_message="{ item }">
-          <span v-if="item.error_message" class="text-error text-body-2">{{ item.error_message }}</span>
-          <span v-else class="text-medium-emphasis">—</span>
-        </template>
-        <template #item.sent_at="{ item }">
-          <span v-if="item.sent_at" class="text-body-2">{{ item.sent_at }}</span>
-          <span v-else class="text-medium-emphasis">—</span>
-        </template>
-      </v-data-table>
-    </v-card>
-  </v-container>
+    <div :style="tableWrapStyle">
+      <div style="min-width: 760px">
+        <div :style="headerRowStyle">
+          <span>Job</span><span>Recipient</span><span>Subject</span><span>Time</span><span>Status</span>
+        </div>
+        <div v-if="loading" style="padding: 24px; text-align: center" :style="{ color: t.muted }">Loading…</div>
+        <div v-for="job in jobs" :key="job.id" :style="bodyRowStyle">
+          <span style="font-family: 'Geist Mono', monospace; font-size: 12px" :style="{ color: t.muted }">#{{ job.id.slice(0, 4) }}</span>
+          <span style="font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap">{{ job.to_email }}</span>
+          <span style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap" :style="{ color: t.muted }">{{ job.subject }}</span>
+          <span style="font-family: 'Geist Mono', monospace; font-size: 13px" :style="{ color: t.muted }">{{ job.sent_at || job.send_date || '—' }}</span>
+          <span>
+            <span :style="chipStyle(statusKey(job.status))">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <path :d="ICON[statusKey(job.status)][0]"></path>
+                <path :d="ICON[statusKey(job.status)][1]"></path>
+              </svg>
+              {{ statusLabel(job.status) }}
+            </span>
+          </span>
+        </div>
+      </div>
+    </div>
+  </div>
 </template>
 
 <script setup>
 import { computed, onMounted, ref } from 'vue'
+import { useTheme } from '../composables/useTheme'
+import {
+  ICON,
+  chipStyle as chipStyleFn,
+  secondaryStyle as secondaryStyleFn,
+  statIconStyle as statIconStyleFn
+} from '../theme/mono'
 import { listJobs } from '../api/client'
+
+const { t } = useTheme()
 
 const jobs = ref([])
 const loading = ref(true)
 const errorMessage = ref('')
 
-const headers = [
-  { title: 'To', key: 'to_email' },
-  { title: 'Subject', key: 'subject' },
-  { title: 'Status', key: 'status' },
-  { title: 'Sent at', key: 'sent_at' },
-  { title: 'Error', key: 'error_message' }
-]
+const secondaryStyle = computed(() => secondaryStyleFn(t.value))
 
-const statusMeta = {
-  pending_review: { label: 'Pending review', icon: 'mdi-file-document-outline' },
-  scheduled: { label: 'Scheduled', icon: 'mdi-clock-outline' },
-  queued: { label: 'Queued', icon: 'mdi-clock-outline' },
-  sent: { label: 'Sent', icon: 'mdi-check-circle' },
-  failed: { label: 'Failed', icon: 'mdi-alert-circle' }
+const errorStyle = computed(
+  () => `padding:10px 14px;border-radius:${t.value.r3};background:${t.value.fl[0]};color:${t.value.fl[1]};font-size:13px;margin-bottom:16px`
+)
+
+const statCardStyle = computed(
+  () =>
+    `background:${t.value.card};border:1px solid ${t.value.line};border-radius:${t.value.r2};padding:18px 20px;box-shadow:${t.value.shadow};display:flex;justify-content:space-between;align-items:center`
+)
+
+const tableWrapStyle = computed(
+  () => `background:${t.value.card};border:1px solid ${t.value.line};border-radius:${t.value.r};box-shadow:${t.value.shadow};overflow-x:auto`
+)
+
+const headerRowStyle = computed(
+  () =>
+    `display:grid;grid-template-columns:60px 1.5fr 1.5fr 1.2fr 1fr;gap:16px;padding:12px 20px;font-size:12px;font-weight:600;color:${t.value.muted};text-transform:uppercase;letter-spacing:.06em;border-bottom:1px solid ${t.value.line};background:${t.value.well};border-radius:${t.value.r} ${t.value.r} 0 0`
+)
+
+const bodyRowStyle = computed(
+  () => `display:grid;grid-template-columns:60px 1.5fr 1.5fr 1.2fr 1fr;gap:16px;padding:14px 20px;font-size:14px;align-items:center;border-bottom:1px solid ${t.value.line}`
+)
+
+function statIconStyle(key) {
+  return statIconStyleFn(key, t.value)
+}
+
+function chipStyle(key) {
+  return chipStyleFn(key, t.value)
+}
+
+function statusKey(status) {
+  if (status === 'sent') return 'sent'
+  if (status === 'scheduled' || status === 'queued') return 'scheduled'
+  if (status === 'failed') return 'failed'
+  return 'pending'
 }
 
 function statusLabel(status) {
-  return statusMeta[status]?.label || status
+  const key = statusKey(status)
+  return key.charAt(0).toUpperCase() + key.slice(1)
 }
 
-function statusIcon(status) {
-  return statusMeta[status]?.icon || 'mdi-help-circle-outline'
-}
-
-const counts = computed(() => {
-  const result = { sent: 0, scheduled: 0, failed: 0, pending_review: 0 }
-  for (const job of jobs.value) {
-    if (job.status === 'sent') result.sent += 1
-    else if (job.status === 'scheduled' || job.status === 'queued') result.scheduled += 1
-    else if (job.status === 'failed') result.failed += 1
-    else if (job.status === 'pending_review') result.pending_review += 1
-  }
-  return result
+const stats = computed(() => {
+  const counts = { sent: 0, scheduled: 0, failed: 0, pending: 0 }
+  for (const job of jobs.value) counts[statusKey(job.status)] += 1
+  return [
+    { key: 'sent', label: 'Sent', n: counts.sent },
+    { key: 'scheduled', label: 'Scheduled', n: counts.scheduled },
+    { key: 'failed', label: 'Failed', n: counts.failed },
+    { key: 'pending', label: 'Pending', n: counts.pending }
+  ]
 })
 
 async function load() {

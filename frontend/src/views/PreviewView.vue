@@ -1,93 +1,103 @@
 <template>
-  <v-container class="py-12" style="max-width: 960px">
-    <div class="d-flex flex-column flex-md-row align-md-end justify-space-between mb-8" style="gap: 16px">
-      <div style="max-width: 560px">
-        <h1 class="text-h4 font-weight-bold mb-2">Preview emails</h1>
-        <p class="text-body-2 text-medium-emphasis">
-          Review the parsed rows below. If you notice an error, re-upload your sheet. Emails will be processed
-          exactly as shown.
-        </p>
-      </div>
-      <div class="stat-chip d-flex align-center px-3 py-2">
-        <v-icon icon="mdi-table" color="primary" size="18" class="mr-2" />
-        <span class="text-caption font-weight-bold text-primary">{{ rows.length }} rows parsed</span>
-      </div>
-    </div>
-
-    <v-card>
-      <v-data-table :headers="headers" :items="rows" :loading="loading" density="comfortable" hover>
-        <template #item.content="{ item }">
-          <span class="text-medium-emphasis font-italic">{{ truncate(item.content) }}</span>
-        </template>
-        <template #header.send_date="{ column }">
-          <v-icon icon="mdi-clock-outline" size="14" class="mr-1" />{{ column.title }}
-        </template>
-        <template #item.send_date="{ item }">
-          <span v-if="item.send_date" class="text-caption text-medium-emphasis">{{ item.send_date }}</span>
-          <span v-if="item.send_time" class="text-caption font-weight-bold text-medium-emphasis ml-1">{{ item.send_time }}</span>
-          <span v-if="!item.send_date && !item.send_time" class="text-caption text-medium-emphasis">Immediate</span>
-        </template>
-        <template #header.attachment_filename="{ column }">
-          <v-icon icon="mdi-paperclip" size="14" class="mr-1" />{{ column.title }}
-        </template>
-        <template #item.attachment_filename="{ item }">
-          <v-chip v-if="item.attachment_filename" size="small" color="primary" variant="tonal">
-            {{ item.attachment_filename }}
-          </v-chip>
-          <span v-else class="text-medium-emphasis">—</span>
-        </template>
-      </v-data-table>
-
-      <v-alert v-if="errorMessage" type="error" density="compact" class="ma-4">
-        {{ errorMessage }}
-      </v-alert>
-
-      <v-divider />
-      <div class="d-flex flex-column flex-sm-row align-sm-center justify-space-between pa-6" style="gap: 16px">
-        <div class="d-flex align-center text-caption text-medium-emphasis">
-          <v-icon icon="mdi-alert-circle" color="warning" size="18" class="mr-2" />
-          Double check all addresses before sending
+  <div>
+    <div style="display: flex; justify-content: space-between; align-items: flex-end; gap: 16px; flex-wrap: wrap; margin-bottom: 20px">
+      <div>
+        <h1 style="font-size: 30px; letter-spacing: -0.03em; margin: 0 0 6px">Preview</h1>
+        <div style="display: flex; align-items: center; gap: 8px; font-size: 14px" :style="{ color: t.muted }">
+          <span :style="countPillStyle">{{ rows.length }} rows</span> parsed from your sheet
         </div>
-        <v-btn class="gradient-btn" :loading="confirming" :disabled="rows.length === 0" @click="confirm">
-          <v-icon icon="mdi-send" size="18" class="mr-2" />
-          Confirm & Queue Batch
-        </v-btn>
       </div>
-    </v-card>
-
-    <div class="d-flex justify-center mt-8">
-      <v-btn variant="text" color="secondary" :to="{ name: 'upload' }">
-        <v-icon icon="mdi-chevron-left" size="18" class="mr-1" />
-        Back to Upload
-      </v-btn>
+      <div style="display: flex; gap: 10px">
+        <button :style="secondaryStyle" @click="router.push({ name: 'upload' })">Back</button>
+        <button :style="primaryStyle" :disabled="rows.length === 0 || confirming" @click="confirm">
+          {{ confirming ? 'Queuing…' : 'Confirm & Queue Batch' }}
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M5 12h14M13 6l6 6-6 6"></path>
+          </svg>
+        </button>
+      </div>
     </div>
-  </v-container>
+
+    <div v-if="errorMessage" :style="errorStyle" class="mb-4">{{ errorMessage }}</div>
+
+    <div :style="tableWrapStyle">
+      <div style="min-width: 820px">
+        <div :style="headerRowStyle">
+          <span>To</span><span>Subject</span><span>Content</span><span>Schedule</span><span>Attachment</span>
+        </div>
+        <div v-if="loading" style="padding: 24px; text-align: center" :style="{ color: t.muted }">Loading…</div>
+        <div v-for="row in rows" :key="row.id" :style="bodyRowStyle">
+          <span style="font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap">{{ row.to_email }}</span>
+          <span style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap">{{ row.subject }}</span>
+          <span style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap" :style="{ color: t.muted }">{{ truncate(row.content) }}</span>
+          <span style="display: flex; align-items: center; gap: 6px; font-size: 13px; font-family: 'Geist Mono', monospace" :style="{ color: t.muted }">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+              <circle cx="12" cy="12" r="9"></circle>
+              <path d="M12 7v5l3 2"></path>
+            </svg>
+            {{ schedule(row) }}
+          </span>
+          <span style="display: flex; align-items: center; gap: 6px; font-size: 13px" :style="{ color: t.muted }">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="m21 11-9 9a5 5 0 0 1-7-7l9-9a3.5 3.5 0 0 1 5 5l-9 9a2 2 0 0 1-3-3l8-8"></path>
+            </svg>
+            {{ row.attachment_filename || '—' }}
+          </span>
+        </div>
+      </div>
+    </div>
+  </div>
 </template>
 
 <script setup>
-import { onMounted, ref } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
+import { useTheme } from '../composables/useTheme'
+import { primaryStyle as primaryStyleFn, secondaryStyle as secondaryStyleFn } from '../theme/mono'
 import { confirmBatch, getBatch } from '../api/client'
 
 const props = defineProps({ batchId: { type: String, required: true } })
 const router = useRouter()
+const { t } = useTheme()
 
 const rows = ref([])
 const loading = ref(true)
 const confirming = ref(false)
 const errorMessage = ref('')
 
-const headers = [
-  { title: 'To', key: 'to_email' },
-  { title: 'Subject', key: 'subject' },
-  { title: 'Content', key: 'content' },
-  { title: 'Schedule', key: 'send_date' },
-  { title: 'Attachment', key: 'attachment_filename' }
-]
+const primaryStyle = computed(() => primaryStyleFn(t.value))
+const secondaryStyle = computed(() => secondaryStyleFn(t.value))
+
+const countPillStyle = computed(
+  () =>
+    `padding:3px 10px;border-radius:999px;background:${t.value.chipBg};border:1px solid ${t.value.line};color:${t.value.ink};font-weight:600;font-size:12px`
+)
+
+const errorStyle = computed(
+  () => `padding:10px 14px;border-radius:${t.value.r3};background:${t.value.fl[0]};color:${t.value.fl[1]};font-size:13px;margin-bottom:16px`
+)
+
+const tableWrapStyle = computed(
+  () => `background:${t.value.card};border:1px solid ${t.value.line};border-radius:${t.value.r};box-shadow:${t.value.shadow};overflow-x:auto`
+)
+
+const headerRowStyle = computed(
+  () =>
+    `display:grid;grid-template-columns:1.4fr 1.3fr 2fr 1.2fr 1.1fr;gap:16px;padding:12px 20px;font-size:12px;font-weight:600;color:${t.value.muted};text-transform:uppercase;letter-spacing:.06em;border-bottom:1px solid ${t.value.line};background:${t.value.well};border-radius:${t.value.r} ${t.value.r} 0 0`
+)
+
+const bodyRowStyle = computed(
+  () => `display:grid;grid-template-columns:1.4fr 1.3fr 2fr 1.2fr 1.1fr;gap:16px;padding:14px 20px;font-size:14px;align-items:center;border-bottom:1px solid ${t.value.line}`
+)
 
 function truncate(text) {
   if (!text) return ''
   return text.length > 60 ? `${text.slice(0, 60)}…` : text
+}
+
+function schedule(row) {
+  if (!row.send_date) return 'Now'
+  return row.send_time ? `${row.send_date} · ${row.send_time}` : row.send_date
 }
 
 async function load() {
