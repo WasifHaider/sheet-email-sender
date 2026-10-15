@@ -1,0 +1,60 @@
+name: Backend Deploy
+
+on:
+  push:
+    branches: [master]
+    paths:
+      - "backend/**"
+      - ".github/workflows/backend-deploy.yml"
+
+env:
+  AWS_REGION: ap-south-1
+  ECR_REPOSITORY: sheet-email-sender-backend
+
+jobs:
+  test:
+    uses: ./.github/workflows/backend-ci.yml
+
+  deploy:
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Build and push image
+        env:
+          REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+        run: |
+          docker build -t "$REGISTRY/$ECR_REPOSITORY:latest" -t "$REGISTRY/$ECR_REPOSITORY:${{ github.sha }}" backend
+          docker push "$REGISTRY/$ECR_REPOSITORY:latest"
+          docker push "$REGISTRY/$ECR_REPOSITORY:${{ github.sha }}"
+
+      - name: Deploy to EC2
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ubuntu
+          key: ${{ secrets.EC2_SSH_KEY }}
+          script: |
+            REGISTRY="${{ steps.login-ecr.outputs.registry }}"
+            REPO="$REGISTRY/${{ env.ECR_REPOSITORY }}"
+            aws ecr get-login-password --region ${{ env.AWS_REGION }} | sudo docker login --username AWS --password-stdin "$REGISTRY"
+            sudo docker pull "$REPO:latest"
+            sudo docker stop sheet-email-sender-backend || true
+            sudo docker rm sheet-email-sender-backend || true
+            sudo docker run -d --name sheet-email-sender-backend --restart unless-stopped \
+              -p 8000:8000 --env-file /home/ubuntu/.env \
+              -v sheet-email-sender-uploads:/app/uploads \
+              "$REPO:latest"
+            sudo docker image prune -f
