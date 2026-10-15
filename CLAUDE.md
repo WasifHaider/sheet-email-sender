@@ -37,7 +37,11 @@ Copy `backend/.env.example` to `backend/.env` and fill in real Supabase + SMTP c
 - Created `backend/app/sheet_parser.py` (`parse_sheet()`, `SheetParseError`).
 - Tests: `backend/tests/test_sheet_parser.py` — 3 passed (happy path, blank optionals, missing required column).
 - Commit: `0f74680`.
-### Task 4 — Upload endpoint — not started
+### Task 4 — Upload endpoint ✅ (2026-10-15)
+- Created `backend/app/routers/upload.py` (`POST /upload`), registered in `main.py`.
+- Created shared `FakeSupabase` test double in `backend/tests/conftest.py` (reused by later task tests).
+- Test: `backend/tests/test_upload.py` — passed. Full suite: 5 passed.
+- Commit: `56ca1ce`.
 ### Task 5 — Batch listing endpoint — not started
 ### Task 6 — Confirm endpoint — not started
 ### Task 7 — Jobs listing endpoint — not started
