@@ -42,7 +42,9 @@ Copy `backend/.env.example` to `backend/.env` and fill in real Supabase + SMTP c
 - Created shared `FakeSupabase` test double in `backend/tests/conftest.py` (reused by later task tests).
 - Test: `backend/tests/test_upload.py` — passed. Full suite: 5 passed.
 - Commit: `56ca1ce`.
-### Task 5 — Batch listing endpoint — not started
+### Task 5 — Batch listing endpoint ✅ (2026-10-15)
+- Created `backend/app/routers/batches.py` (`GET /batches/{batch_id}`), registered in `main.py`.
+- Test: `backend/tests/test_batches.py` — passed. Full suite: 6 passed.
 ### Task 6 — Confirm endpoint — not started
 ### Task 7 — Jobs listing endpoint — not started
 ### Task 8 — Mailer module — not started
