@@ -4,7 +4,7 @@ import time
 import jwt
 from fastapi import HTTPException, Request
 
-SESSION_COOKIE_NAME = "session"
+SESSION_COOKIE_NAME = "ses_auth"
 SESSION_MAX_AGE_SECONDS = 7 * 24 * 60 * 60
 
 

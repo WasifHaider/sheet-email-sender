@@ -9,7 +9,7 @@ from app.auth import SESSION_COOKIE_NAME, create_session_token, decode_session_t
 
 
 def _request_with_cookie(token: str | None) -> Request:
-    cookie_header = f"session={token}".encode() if token else b""
+    cookie_header = f"{SESSION_COOKIE_NAME}={token}".encode() if token else b""
     headers = [(b"cookie", cookie_header)] if token else []
     scope = {"type": "http", "headers": headers}
     return Request(scope)
@@ -78,7 +78,7 @@ def test_google_callback_creates_new_user_and_sets_cookie(fake_db, monkeypatch):
     response = client.get("/auth/google/callback")
 
     assert response.status_code in (302, 307)
-    assert "session" in response.cookies
+    assert SESSION_COOKIE_NAME in response.cookies
 
     users = fake_db.table("users").select("*").eq("google_sub", "google-123").execute().data
     assert len(users) == 1
@@ -141,4 +141,4 @@ def test_logout_clears_cookie(monkeypatch):
 
     assert response.status_code == 200
     set_cookie = response.headers.get("set-cookie", "")
-    assert "session=" in set_cookie and ("Max-Age=0" in set_cookie or "expires=" in set_cookie.lower())
+    assert f"{SESSION_COOKIE_NAME}=" in set_cookie and ("Max-Age=0" in set_cookie or "expires=" in set_cookie.lower())

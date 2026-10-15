@@ -1,7 +1,7 @@
 import os
 
 from authlib.integrations.starlette_client import OAuth
-from fastapi import APIRouter, Depends, Request
+from fastapi import APIRouter, Depends, HTTPException, Request
 from fastapi.responses import JSONResponse, RedirectResponse
 
 from ..auth import SESSION_MAX_AGE_SECONDS, SESSION_COOKIE_NAME, create_session_token, get_current_user
@@ -26,7 +26,9 @@ oauth.register(
 @router.get("/auth/google/login")
 async def google_login(request: Request):
     redirect_uri = os.environ["GOOGLE_REDIRECT_URI"]
-    return await oauth.google.authorize_redirect(request, redirect_uri)
+    return await oauth.google.authorize_redirect(
+        request, redirect_uri, access_type="offline", prompt="consent"
+    )
 
 
 @router.get("/auth/google/callback")
@@ -46,6 +48,14 @@ async def google_callback(request: Request, db=Depends(get_supabase)):
             update_fields["refresh_token"] = refresh_token
         db.table("users").update(update_fields).eq("id", user_id).execute()
     else:
+        if not refresh_token:
+            raise HTTPException(
+                status_code=400,
+                detail=(
+                    "Google didn't grant offline access, so we can't send email as you yet. "
+                    "Revoke this app's access at https://myaccount.google.com/permissions and try signing in again."
+                ),
+            )
         inserted = db.table("users").insert(
             [{"google_sub": sub, "email": email, "name": name, "refresh_token": refresh_token}]
         ).execute().data
