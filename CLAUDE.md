@@ -103,8 +103,14 @@ User brought an updated design made externally with Claude Design (claude.ai/des
 - Verified in browser: Upload and Status screens render correctly in both light and dark mode, dark mode persists across navigation, error handling (from the Task 11 fix) still works correctly in the new markup.
 - Commit: `feat: implement Mono theme redesign from Claude Design prototype`.
 
+### Real credentials wired and verified end-to-end ✅ (2026-10-15)
+`backend/.env` (gitignored, not committed) now has real Supabase project credentials and a working Gmail SMTP app password. Verified with a real upload→confirm→send round trip against the actual Supabase project and Gmail: row inserted, scheduler picked it up within 60s, email sent successfully (`status: "sent"` with a real `sent_at` timestamp) — check mwasifhaider1@gmail.com inbox for "Test send" to confirm delivery. A couple of test rows exist in the real `email_jobs` Supabase table from this verification; harmless, but can be cleared from the Supabase dashboard if desired.
+- First password the user gave wasn't an app password (Gmail rejected it, `"Connection unexpectedly closed"`). App Passwords were initially unavailable on the account until 2-Step Verification was enabled; after that, a real app password worked.
+- Along the way, a stale backend process from an earlier test session kept holding port 8000 silently, so a server restart appeared to apply a new password but was actually still serving requests from the old process with the old password — second send attempt also "failed" for that reason until the stale process was found and killed. Lesson: after editing `.env`, verify the *new* process actually bound the port (watch for `[Errno 10048]`/`only one usage of each socket address` in the log) before trusting a test result.
+
 ## Notes / decisions
 - Working directly on `master`, no feature branches (solo, simple project).
 - Deploy target undecided — running locally for now (per user).
 - Git identity for this repo (personal project): `WasifHaider <mwasifhaider1@gmail.com>`, set locally via `git config user.name/user.email` in this repo — overrides the machine's global work identity.
+- `backend/.env` has real working Supabase + Gmail SMTP credentials (not committed). The app is fully functional end-to-end as of 2026-10-15.
 - `.claude/launch.json` config name is `frontend`, runs `npm --prefix frontend run dev` for browser-pane testing via `preview_start`.
