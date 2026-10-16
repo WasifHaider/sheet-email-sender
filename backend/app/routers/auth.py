@@ -9,6 +9,12 @@ from ..db import get_supabase
 
 router = APIRouter()
 
+# Cross-site cookies (frontend and backend on different domains, as in
+# production) require SameSite=None + Secure. Same-site setups (local dev,
+# both on localhost) use the stricter Lax default.
+COOKIE_SAMESITE = os.environ.get("COOKIE_SAMESITE", "lax")
+COOKIE_SECURE = os.environ.get("COOKIE_SECURE", "false").lower() == "true"
+
 oauth = OAuth()
 oauth.register(
     name="google",
@@ -68,7 +74,8 @@ async def google_callback(request: Request, db=Depends(get_supabase)):
         key=SESSION_COOKIE_NAME,
         value=session_token,
         httponly=True,
-        samesite="lax",
+        samesite=COOKIE_SAMESITE,
+        secure=COOKIE_SECURE,
         max_age=SESSION_MAX_AGE_SECONDS,
     )
     return response
@@ -82,5 +89,5 @@ def me(user: dict = Depends(get_current_user)):
 @router.post("/auth/logout")
 def logout():
     response = JSONResponse({"status": "logged_out"})
-    response.delete_cookie(SESSION_COOKIE_NAME)
+    response.delete_cookie(SESSION_COOKIE_NAME, samesite=COOKIE_SAMESITE, secure=COOKIE_SECURE)
     return response
