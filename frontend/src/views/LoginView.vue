@@ -1,5 +1,5 @@
 <template>
-  <div style="min-height: 100vh; display: flex; align-items: center; justify-content: center">
+  <div :style="overlayStyle">
     <div :style="cardStyle">
       <h1 style="font-size: 1.5rem; font-weight: 700; margin: 0 0 8px; text-align: center">
         Sheet Email Sender
@@ -26,6 +26,11 @@ import { useTheme } from '../composables/useTheme'
 import { API_BASE_URL } from '../api/client'
 
 const { t } = useTheme()
+
+const overlayStyle = computed(
+  () =>
+    `position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:${t.value.bg};z-index:10`
+)
 
 const cardStyle = computed(
   () =>
